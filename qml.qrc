@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>Style.qml</file>
+        <file>tau-prolog.js</file>
+        <file>qmldir</file>
+        <file>utils.js</file>
+        <file>AlphaNot.qml</file>
+        <file>AlphaAnd.qml</file>
+        <file>AlphaProp.qml</file>
+        <file>AlphaTestbed.qml</file>
+        <file>AlphaCtx.qml</file>
+        <file>AlphaElem.qml</file>
+        <file>AlphaLayer.qml</file>
+    </qresource>
+</RCC>

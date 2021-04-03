@@ -4,9 +4,14 @@
 
 #include "alpha.h"
 
+/* TODO checking siblings during matching requires sibling list to be 
+ * unordered; at each level, XOR leaf hashes and hash in number of children */
+
+static void alpha_delnode(struct alpha_node *ap);
+static void alpha_updnode(struct alpha_node *ap, int depth);
+
 struct alpha_node *alpha_makenode(struct alpha_node *parent,
-  struct alpha_node *child, struct alpha_node *nsib, struct alpha_node *psib,
-  const char *name,  int cut) {
+  struct alpha_node *child, const char *name, int type) {
 
   if ((name && child) || (!name && !child)) {
     return NULL;
@@ -35,16 +40,32 @@ struct alpha_node *alpha_makenode(struct alpha_node *parent,
     ap->depth = parent->depth + 1;
   }
   ap->parent = parent;
+
+  if (child) {
+    child->parent = ap;
+    alpha_updnode(child, ap->depth + 1);
+  }
   ap->child = child;
-  ap->nsib = nsib;
-  ap->psib = psib;
   
   strncpy(namebuf, name, namelen); /* TOCTOU */
   ap->name = namebuf;
 
-  ap->cut = cut;
+  ap->type = type;
 
   return ap;
+}
+
+/* Recompute the hash of ap and all its ancestors. The hash of a PROP
+ * node is the djb2 hash of the string; the hash of an AND node is the XOR of
+ * its childrens', multiplied by the number of children, and the hash of a NOT
+ * node is the binary inverse of its childrens' hash + 1. */
+static void alpha_rehash(struct alpha_node *ap) {
+  hash_t newhash = 0;
+  size_t num_child = 0;
+  for (struct alpha_node *child = ap->child; child != NULL; num_child++) {
+    newhash ^= child->hash;
+    child = child->nsib;
+  }
 }
 
 /* Delete nodes within a tree being deleted */
@@ -79,7 +100,6 @@ static void alpha_updnode(struct alpha_node *ap, int depth) {
   alpha_updnode(ap->nsib, depth);
 }
 
-/* TODO match tree vs match node */
 int alpha_match(struct alpha_node *a1p, struct alpha_node *a2p) {
   if ((a1p && !a2p) || (!a1p && a2p)) {
     return 0;
@@ -95,12 +115,37 @@ int alpha_match(struct alpha_node *a1p, struct alpha_node *a2p) {
     }
   }
 
-  return alpha_match(a1p->parent, a2p->parent)
-    && alpha_match(a1p->child, a2p->child)
+  /* TODO match tree vs match node */
+  return alpha_match(a1p->child, a2p->child)
     && alpha_match(a1p->nsib, a2p->nsib);
 }
 
-/* TODO paste: check if pasting a graph here would be valid; ascend
- * the ancestry until the destination's ancestor is the source's parent  */
+/* Check if pasting the tree rooted at to_paste as a child of curr would be a
+ * valid exercise of the iteration rule. */
+int alpha_chkpaste(struct alpha_node *curr, struct alpha_node *to_paste) {
+  if (!to_paste) {
+    return 0;
+  }
+
+  if (curr == to_paste) {
+    return 0;
+  } 
+
+  if (curr == to_paste->parent) {
+    return 1;
+  } 
+
+  if (!curr->parent) {
+    return 0;
+  } 
+ 
+  return alpha_chkpaste(curr->parent, to_paste);
+}
 
 /* TODO delete and paste, each with check */
+int alpha_remdneg(struct alpha_node *ap) {
+}
+
+int alpha_adddneg(struct alpha_node *ap) {
+}
+
