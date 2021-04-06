@@ -37,6 +37,20 @@ Window {
                     Layout.fillHeight: true
                     Layout.fillWidth: true
 
+                    Rectangle {
+                        id: rectangle
+                        color: Style.bgColour
+                        width: parent.width
+                        height: 0.1 * parent.height
+
+                        Text {
+                            text: "Clipboard"
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            color: Style.fgColour
+                        }
+                    }
+
                     Flickable {
                         id: clipboard
                         anchors.fill: parent
@@ -45,6 +59,7 @@ Window {
 
                 ButtonGroup {
                     id: modeButtons
+
                 }
 
                 ListView {
@@ -55,8 +70,10 @@ Window {
                     delegate: RadioDelegate {
                         id: modeDelegate
                         text: modelData
-                        checked: index == 0
+                        checked: index == modeList.currentIndex
+                        onCheckedChanged: modeList.currentIndex = index
                         ButtonGroup.group: modeButtons
+
                         contentItem : Text {
                             rightPadding: modeDelegate.indicator.width + modeDelegate.spacing
                             text: modeDelegate.text
@@ -88,46 +105,19 @@ Window {
                 clip: true
                 boundsBehavior: Flickable.DragOverBounds
 
+                MouseArea {
+                    id: stageMouse
+                    anchors.fill: stage
+                }
+
                 Flow {
-                    id: stage
+                    id: stage /* root conjunction */
 
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                     width: Utils.calculate_width(this)
                     padding: Utils.spacing
                     spacing: Utils.spacing
-
-                    AlphaNot {
-                        AlphaAnd {
-                            AlphaNot {
-                                AlphaAnd {
-                                    AlphaProp {
-                                        text: "inner proposition"
-                                    }
-
-                                    AlphaProp {
-                                        text: "inner qroqosition"
-                                    }
-                                }
-                            }
-
-                            AlphaProp {
-                                text: "proposition"
-                            }
-
-                            AlphaProp {
-                                text: "qroqosition"
-                            }
-                        }
-                    }
-
-                    AlphaProp {
-                        text: "outer proposition"
-                    }
-
-                    AlphaProp {
-                        text: "outer qroqosition"
-                    }
                 }
             }
 
@@ -152,6 +142,29 @@ Window {
                     cursorShape: Qt.IBeamCursor
                 }
             }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 0.1 * parent.height
+                color: Style.bgColour
+
+                Text {
+
+                    readonly property var hints: [
+                        "Click and drag to move around the propositions.",
+                        "d: delete (even level), i: insert proposition (odd level), x: cut, "
+                        + "y: yank/copy, C: insert double cut, c: remove double cut.",
+                        "a: append proposition (anywhere), d: delete (anywhere), C: insert cut"
+                    ]
+
+                    padding: Utils.spacing / 2
+                    anchors.fill: parent
+                    text: hints[modeList.currentIndex]
+                    color: Style.fgColour
+                    wrapMode: Text.WordWrap
+                }
+            }
+
         }
 
         Popup {

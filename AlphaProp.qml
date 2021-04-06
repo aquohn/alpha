@@ -7,12 +7,15 @@ import QtGraphicalEffects 1.15
 import "utils.js" as Utils
 
 AlphaElem {
+    areaElem: propName
+
     property alias text: propName.text
+    addChild: function(compnt, args) {
+        console.log("Cannot add child to proposition!")
+    }
 
     Text {
         id: propName
-        property int alphaID: 0
-        property var alphaCtx: null
         text: ""
         padding: Utils.spacing / 2
     }

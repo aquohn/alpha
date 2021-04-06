@@ -46,9 +46,11 @@ Item {
         let toAccept = true
 
         if (event.text === 'm') {
-            modeList.currentIndex = (currMode + 1) % 3
+            // modeList.currentIndex = (currMode + 1) % 3
+            modeList.incrementCurrentIndex();
         } else if (event.text === 'M') {
-            modeList.currentIndex = (currMode - 1) % 3
+            // modeList.currentIndex = (currMode - 1) % 3
+            modeList.decrementCurrentIndex();
         } else if (currMode === modeProof && alphaSelected !== 0) {
             switch (event.text) {
             case 'd': /* delete (any even level graph; deleted graph may be pasted) */

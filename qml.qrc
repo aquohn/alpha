@@ -11,6 +11,5 @@
         <file>AlphaTestbed.qml</file>
         <file>AlphaCtx.qml</file>
         <file>AlphaElem.qml</file>
-        <file>AlphaLayer.qml</file>
     </qresource>
 </RCC>

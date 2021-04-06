@@ -7,9 +7,8 @@ import QtGraphicalEffects 1.15
 import "utils.js" as Utils
 
 AlphaElem {
-    id: notElem
-    layer.effect: AlphaLayer {
-        elem: notElem
-        border.width: 1
+    border.width: 1
+    addChild: function(compnt, args) {
+        compnt.createObject(innerFlow, args)
     }
 }

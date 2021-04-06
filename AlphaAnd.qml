@@ -7,5 +7,7 @@ import QtGraphicalEffects 1.15
 import "utils.js" as Utils
 
 AlphaElem {
-    width: Utils.calculate_width(this)
+    addChild: function(compnt, args) {
+        compnt.createObject(innerFlow, args)
+    }
 }
