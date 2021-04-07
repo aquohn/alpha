@@ -12,12 +12,13 @@ Item {
         console.log("Not implemented!")
     }
 
-    property int alphaID: 0
+    property int alphaId: 0
     property var alphaCtx: null
     property bool selected: false
     property alias border: elemRect.border
     property var areaElem: elemRect
 
+    id: thisElem
     height: areaElem.height
     width: areaElem.width
 
@@ -39,8 +40,9 @@ Item {
         anchors.fill: areaElem
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.NoButton
-        cursorShape: Qt.PointingHandCursor
-        preventStealing: true
+        cursorShape: (alphaCtx.currMode === alphaCtx.modeNavi) ? Qt.ArrowCursor : Qt.PointingHandCursor
+        preventStealing: (alphaCtx.currMode === alphaCtx.modeNavi)
+        onClicked: alphaCtx.clicked(thisElem)
     }
 
     DropShadow {
@@ -48,8 +50,9 @@ Item {
         anchors.fill: areaElem
         source: areaElem
         visible: (parent.selected || elemMouse.containsMouse)
-        radius: 8.0
-        samples: 17
-        color: "#80000000"
+        radius: 5.0
+        samples: 15
+        opacity: (alphaCtx.currMode === alphaCtx.modeNavi) ? 0.0 : 0.8
+        color: (alphaCtx.alphaClipped === null) ? "lightsteelblue" : "lightgreen"
     }
 }
