@@ -20,6 +20,7 @@ Window {
         stage: stage
         clipboard: clipboard
         hintText: hintText
+        alphaEngine: alphaEngine
         focus: true
 
         MouseArea {
@@ -249,8 +250,9 @@ Window {
 
                 TextInput {
                     padding: Utils.spacing / 2
+                    wrapMode: TextInput.WordWrap
                     anchors.fill: parent
-                    id: user_input
+                    id: userInput
                 }
 
                 MouseArea {
@@ -292,38 +294,5 @@ Window {
 
         }
 
-        Popup {
-            id: propname_prompt
-            padding: 10
-            anchors.centerIn: Overlay.overlay
-            width: 0.5 * window.width
-            height: 0.3 * window.width
-
-            contentItem: Column {
-                spacing: 5
-                padding: 5
-
-                Text {
-                    text: "Enter the name for the new proposition (leave blank for cut):"
-                }
-
-                Rectangle {
-                    height: 32
-                    color: Style.fgColour
-                    border.color: Style.bgColour
-                    border.width: 1
-
-                    TextInput {
-                        anchors.fill: parent
-                        id: propname_input
-                    }
-                }
-
-                Button {
-                    text: "Done"
-                    /* TODO send propname_input */
-                }
-            }
-        }
     }
 }

@@ -8,6 +8,7 @@ import "tau-prolog.js" as Prolog
 import "utils.js" as Utils
 
 Item {
+    id: alphaCtx
     anchors.fill: parent
 
     /* external elements */
@@ -29,7 +30,6 @@ Item {
 
     function clicked(alphaElem) {
         if (currMode === modeNavi) {
-            /* pass to flickable? */
             return
         } else if (alphaClipped !== null) {
             paste(alphaElem, alphaClipped)
@@ -41,9 +41,9 @@ Item {
     }
 
     function select(alphaElem) {
-        if (alphaElem.alphaId === 1) {
+        if (alphaElem.alphaId === 1) { /* root conjunction selected */
             if (currMode === modeHypo) {
-                /* TODO: create popup allowing user to insert new prop or empty cut */
+                propPrompt.open()
             } else {
                 clear()
             }
@@ -68,12 +68,13 @@ Item {
     }
 
     function clear() {
-        alphaClipped = null
+        alphaClipped = null /* TODO prevent accidental deletion */
         if (alphaSelected != null) {
             alphaSelected.selected = false
         }
         alphaSelected = null
         hintText.special = null
+        alphaCtx.focus = true
     }
 
     /* Key handling logic */
@@ -94,10 +95,10 @@ Item {
             modeList.currentIndex = temp % numModes
         } else if (event.text === 'z') {
             if (stage.scale > 0.2) {
-                stage.scale -= 0.1
+                stage.scale -= 0.2
             }
         } else if (event.text === 'Z') {
-            stage.scale += 0.1
+            stage.scale += 0.2
         } else if (currMode === modeProof && alphaSelected !== null) {
             switch (event.text) {
             case 'd': /* delete (any even level graph; deleted graph may be pasted) */
@@ -140,31 +141,57 @@ Item {
         padding: Utils.spacing
         anchors.centerIn: Overlay.overlay
         width: 0.5 * window.width
-        height: 0.3 * window.height
 
-        contentItem: Column {
-            spacing: Utils.spacing / 2
-            padding: Utils.spacing / 2
+        function sendInput(input) {
+            /* TODO validate and send input */
+        }
+
+        contentItem: ColumnLayout {
+            spacing: Utils.spacing
 
             Text {
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
                 text: "Enter the name for the new proposition (leave blank for cut):"
             }
 
             Rectangle {
-                height: 32
+                Layout.fillWidth: true
                 color: Style.fgColour
                 border.color: Style.bgColour
                 border.width: 1
+                height: propInput.contentHeight + Utils.spacing
 
                 TextInput {
-                    anchors.fill: parent
                     id: propInput
+                    anchors.fill: parent
+                    padding: Utils.spacing / 2
+                    clip: true
+                    onAccepted: propPrompt.sendInput(propInput.text)
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.NoButton
+                    cursorShape: Qt.IBeamCursor
                 }
             }
 
+            Text {
+                id: promptError
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+                color: "red"
+                text: ""
+                visible: (text !== "")
+            }
+
             Button {
+                Layout.alignment: Qt.AlignHCenter
                 text: "Done"
-                /* TODO send propname_input */
+                onClicked: propPrompt.sendInput(propInput.text)
             }
         }
     }

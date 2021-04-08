@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-    QAlpha alpha_engine();
+    QAlpha alpha_engine;
     QQmlApplicationEngine engine;
 
     engine.rootContext()->setContextProperty("alphaEngine", &alpha_engine);
