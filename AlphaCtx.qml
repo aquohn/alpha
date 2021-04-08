@@ -101,13 +101,13 @@ Item {
             stage.scale += 0.2
         } else if (currMode === modeProof && alphaSelected !== null) {
             switch (event.text) {
-            case 'd': /* delete (any even level graph; deleted graph may be pasted) */
-                break;
             case 'i': /* insert (add arbitrary child within odd level) */
                 break
-            case 'x': /* cut (can be pasted; sometimes must be pasted) */
-                break
+            case 'd': /* delete (any even level graph; do not put in clipboard) */
+                break;
             case 'y': /* yank/copy (can only be pasted in nodes descended from parent) */
+                break
+            case 'x': /* cut (can be pasted; sometimes must be pasted) */
                 break
             case 'C': /* enclose with double cut */
                 break
@@ -118,11 +118,13 @@ Item {
             }
         } else if (currMode === modeHypo && alphaSelected !== null) {
             switch (event.text) {
-            case 'a': /* append proposition within selected node */
+            case 'i': /* insert node at selection */
+                break
+            case 'd': /* delete selection */
                 break
             case 'C': /* enclose with cut */
                 break
-            case 'd': /* delete selection */
+            case 'c': /* remove enclosing cut */
                 break
             default:
                 toAccept = false
