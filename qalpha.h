@@ -3,26 +3,38 @@
 
 #include <QObject>
 #include <QMap>
+#include <QRandomGenerator>
 #include <libalpha/alpha.h>
 
+typedef unsigned long alpha_id_t;
+
 class AlphaDelegate {
-    QMap<unsigned long, struct alpha_node *> id_node;
-    QMap<struct alpha_node *, unsigned long> node_id;
+    QMap<alpha_id_t, struct alpha_node *> id_node;
+    QMap<struct alpha_node *, alpha_id_t> node_id;
 
 public:
-    void addNode(struct alpha_node *ap, unsigned long id);
+    explicit AlphaDelegate(struct alpha_node *root);
 
-    void remIds(QList<unsigned long> idlist);
-    void remId(unsigned long id);
+    alpha_id_t addNode(struct alpha_node *ap);
+    void addNode(struct alpha_node *ap, alpha_id_t id);
 
-    unsigned long getAvailId();
-    unsigned long getId(struct alpha_node *ap);
-    unsigned long getNode(unsigned long id);
+    void remId(alpha_id_t id);
+    void remNode(alpha_node *node);
+
+    alpha_id_t getId(struct alpha_node *ap);
+    alpha_id_t getNode(alpha_id_t id);
 };
 
-class QAlpha : public QObject
-{
+class QAlpha : public QObject {
+
     Q_OBJECT
+
+    QRandomGenerator rng;
+    struct alpha_node *stage;
+    struct alpha_node *clipboard;
+    AlphaDelegate stageDelegate;
+    AlphaDelegate clipboardDelegate;
+
 public:
     explicit QAlpha(QObject *parent = nullptr);
 

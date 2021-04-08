@@ -235,9 +235,7 @@ Window {
                             }
                         }
                     }
-
                 }
-
             }
 
             Rectangle {
