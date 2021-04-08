@@ -20,7 +20,7 @@ Window {
         stage: stage
         clipboard: clipboard
         hintText: hintText
-        alphaEngine: alphaEngine
+        alphaEngine: alpha_engine
         focus: true
 
         MouseArea {

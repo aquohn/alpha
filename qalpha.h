@@ -2,12 +2,13 @@
 #define QALPHA_H
 
 #include <QObject>
+#include <QSet>
 #include <QMap>
 #include <QRandomGenerator>
 #include <libalpha/alpha.h>
 
 #define QALPHA_ROOT_ID 1
-typedef unsigned long alpha_id_t;
+typedef int alpha_id_t;
 
 class AlphaDelegate {
 
@@ -18,6 +19,7 @@ private:
 
 public:
     struct alpha_node *root;
+    alpha_id_t root_id;
 
     AlphaDelegate(alpha_id_t root_id);
     ~AlphaDelegate();
@@ -38,9 +40,7 @@ class QAlpha : public QObject {
 
     Q_OBJECT
     Q_PROPERTY(int root_id READ root_id)
-    Q_PROPERTY(int retOK READ retOK)
-    Q_PROPERTY(int retINVALID READ retINVALID)
-    Q_PROPERTY(int retMUST_PASTE READ retMUST_PASTE)
+    Q_PROPERTY(int name_max_len READ name_max_len)
 
 private:
     struct alpha_node *stage_root;
@@ -56,18 +56,21 @@ private:
     QList<int> _get_descendants(AlphaDelegate *delegatep, alpha_id_t id);
     QList<int> _get_descendants(AlphaDelegate *delegatep, struct alpha_node *node);
 
-    int _hypo_insert(AlphaDelegate *delegatep, alpha_id_t target, alpha_id_t content);
+    int _hypo_insert(AlphaDelegate *delegatep, alpha_id_t target, QString content);
     int _hypo_delete(AlphaDelegate *delegatep, alpha_id_t target);
     int _hypo_addcut(AlphaDelegate *delegatep, alpha_id_t target);
     int _hypo_remcut(AlphaDelegate *delegatep, alpha_id_t target);
 
 public:
-    const alpha_id_t root_id = QALPHA_ROOT_ID;
-    const int retOK = 0;
-    const int retINVALID = -1;
-    const int retMUST_PASTE = 1;
-
     explicit QAlpha(QObject *parent = nullptr);
+
+    int root_id() const {
+        return QALPHA_ROOT_ID;
+    }
+
+    int name_max_len() const {
+        return ALPHA_STR_MAXLEN;
+    }
 
     Q_INVOKABLE void stage_clear(void);
     Q_INVOKABLE void clip_clear(void);
@@ -77,19 +80,23 @@ public:
     Q_INVOKABLE QList<int> stage_get_children(alpha_id_t id);
     Q_INVOKABLE QList<int> clip_get_children(alpha_id_t id);
 
+    /* Model manipulation methods; return alpha_id of node whose children
+     * alphaCtx will need to re-check. Note that the returned alpha_id can be for
+     * the clipboard or the stage; TODO document */
     Q_INVOKABLE int prf_insert(alpha_id_t target, alpha_id_t content);
     Q_INVOKABLE int prf_delete(alpha_id_t target);
     Q_INVOKABLE int prf_addcut(alpha_id_t target);
     Q_INVOKABLE int prf_remcut(alpha_id_t target);
     Q_INVOKABLE int prf_cut(alpha_id_t target);
     Q_INVOKABLE int prf_yank(alpha_id_t target);
+    Q_INVOKABLE int prf_paste(alpha_id_t target, alpha_id_t content);
 
-    Q_INVOKABLE int hypo_insert(alpha_id_t target, alpha_id_t content);
+    Q_INVOKABLE int hypo_insert(alpha_id_t target, QString content);
     Q_INVOKABLE int hypo_delete(alpha_id_t target);
     Q_INVOKABLE int hypo_addcut(alpha_id_t target);
     Q_INVOKABLE int hypo_remcut(alpha_id_t target);
 
-    Q_INVOKABLE int clip_insert(alpha_id_t target, alpha_id_t content);
+    Q_INVOKABLE int clip_insert(alpha_id_t target, QString content);
     Q_INVOKABLE int clip_delete(alpha_id_t target);
     Q_INVOKABLE int clip_addcut(alpha_id_t target);
     Q_INVOKABLE int clip_remcut(alpha_id_t target);

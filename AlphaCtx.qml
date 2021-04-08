@@ -7,6 +7,8 @@ import QtGraphicalEffects 1.15
 import "tau-prolog.js" as Prolog
 import "utils.js" as Utils
 
+/* TODO filter based on alphaEngine.name_max_len */
+
 Item {
     id: alphaCtx
     anchors.fill: parent

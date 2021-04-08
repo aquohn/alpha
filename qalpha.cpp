@@ -1,10 +1,13 @@
 #include "qalpha.h"
+#include <QByteArray>
+#include <limits>
 
 /* TODO exception handling */
 
 AlphaDelegate::AlphaDelegate(alpha_id_t root_id) {
     alpha_ret_t ret;
     root = alpha_makenode(nullptr, nullptr, ALPHA_TYPE_AND, &ret);
+    this->root_id = root_id;
     addNode(nullptr, 0);
     addNode(root, root_id);
 }
@@ -17,9 +20,11 @@ alpha_id_t AlphaDelegate::addNode(struct alpha_node *node) {
         return 0;
     }
 
-    alpha_id_t id = node->hash;
+    hash_t hash = node->hash % std::numeric_limits<alpha_id_t>::max();
+    alpha_id_t id = (alpha_id_t) hash;
     while (id_node.find(id) == id_node.end()) {
-        id += rng();
+        alpha_id_t rand = (alpha_id_t) rng();
+        id ^= rand;
     }
 
     addNode(node, id);
@@ -34,7 +39,6 @@ void AlphaDelegate::addNode(struct alpha_node *node, alpha_id_t id) {
     node_id.insert(node, id);
 }
 void AlphaDelegate::reset(void) {
-    alpha_id_t root_id = node_id[root];
     id_node.clear();
     node_id.clear();
     alpha_delnode(root);
@@ -92,7 +96,7 @@ QString QAlpha::_get_node(AlphaDelegate *delegatep, alpha_id_t id) {
     if (node->name) {
         return QString(node->name);
     }
-    return QString("");
+    return QStringLiteral("");
 }
 QList<int> QAlpha::_get_children(AlphaDelegate *delegatep, alpha_id_t id) {
     struct alpha_node *node = delegatep->getNode(id);
@@ -145,16 +149,21 @@ int QAlpha::prf_insert(alpha_id_t target, alpha_id_t content) {
     struct alpha_node *contnode = clipboardDelegate.getNode(content);
 
     if (alpha_prfinsert(tgtnode, contnode) == ALPHA_RET_OK) {
-        /* rely on internal error checking to ignore existing nodes */
-        _register(&stageDelegate, tgtnode);
-        return retOK;
+        _register(&stageDelegate, contnode);
+        return target;
     } else {
-        return retINVALID;
+        return 0;
     }
 }
 
 int QAlpha::prf_delete(alpha_id_t target) {
     struct alpha_node *tgtnode = stageDelegate.getNode(target);
+    struct alpha_node *parent = tgtnode->parent;
+    if (!parent) { /* cannot delete root node */
+        return 0;
+    }
+    alpha_id_t parent_id = stageDelegate.getId(parent);
+
     QList<int> to_delete = _get_descendants(&stageDelegate, tgtnode);
     to_delete += target;
 
@@ -162,35 +171,108 @@ int QAlpha::prf_delete(alpha_id_t target) {
         for (auto it = to_delete.begin(); it < to_delete.end(); ++it) {
             stageDelegate.remId(*it);
         }
-        return retOK;
+        return parent_id;
     } else {
-        return retINVALID;
+        return 0;
     }
 }
 
 int QAlpha::prf_addcut(alpha_id_t target) {
     struct alpha_node *tgtnode = stageDelegate.getNode(target);
+    struct alpha_node *parent = alpha_adddneg(tgtnode);
+    if (!parent) {
+        return 0;
+    }
+
+    _register(&stageDelegate, parent);
+    return stageDelegate.getId(parent);
 }
 
 int QAlpha::prf_remcut(alpha_id_t target) {
     struct alpha_node *tgtnode = stageDelegate.getNode(target);
+    struct alpha_node *parent = tgtnode->parent;
+    if (alpha_remdneg(tgtnode) == ALPHA_RET_OK) {
+        return stageDelegate.getId(parent);
+    }
+    return 0;
 }
 
 int QAlpha::prf_cut(alpha_id_t target) {
     struct alpha_node *tgtnode = stageDelegate.getNode(target);
+    if (alpha_chkdeiter(tgtnode) != ALPHA_RET_OK) {
+        return 0;
+    }
+
+    if (alpha_move(clipboard_root, tgtnode) != ALPHA_RET_OK) {
+        return 0;
+    }
+
+    _register(&clipboardDelegate, tgtnode);
+    return clipboardDelegate.root_id;
 }
 
 int QAlpha::prf_yank(alpha_id_t target) {
     struct alpha_node *tgtnode = stageDelegate.getNode(target);
+    if (alpha_paste(clipboard_root, tgtnode) != ALPHA_RET_OK) {
+        return 0;
+    }
+
+    _register(&clipboardDelegate, tgtnode);
+    return clipboardDelegate.root_id;
 }
 
-int QAlpha::_hypo_insert(AlphaDelegate *delegatep, alpha_id_t target, alpha_id_t content) {
+int QAlpha::prf_paste(alpha_id_t target, alpha_id_t content) {
+    struct alpha_node *tgtnode = stageDelegate.getNode(target);
+    struct alpha_node *contnode = clipboardDelegate.getNode(content);
+
+    if (alpha_paste(tgtnode, contnode) == ALPHA_RET_OK) {
+        _register(&stageDelegate, contnode);
+        return target;
+    } else {
+        return 0;
+    }
+}
+
+int QAlpha::_hypo_insert(AlphaDelegate *delegatep, alpha_id_t target, QString content) {
     struct alpha_node *tgtnode = delegatep->getNode(target);
-    struct alpha_node *contnode = delegatep->getNode(content);
+    struct alpha_node *newnode;
+    alpha_ret_t ret;
+    if (content.length() == 0) {
+        newnode = alpha_makenode(tgtnode, nullptr, ALPHA_TYPE_CUT, &ret);
+    } else {
+        QByteArray byteArr = content.toUtf8();
+        newnode = alpha_makenode(tgtnode, byteArr.data(), ALPHA_TYPE_PROP, &ret);
+    }
+
+    if (!newnode) {
+        return 0;
+    }
+
+    delegatep->addNode(newnode);
+    return target;
 }
 
 int QAlpha::_hypo_delete(AlphaDelegate *delegatep, alpha_id_t target) {
     struct alpha_node *tgtnode = delegatep->getNode(target);
+    if (!tgtnode) {
+        return 0;
+    }
+
+    /* cannot delete root */
+    if (!tgtnode->parent) {
+        return 0;
+    }
+
+    QList<int> to_delete = _get_descendants(delegatep, tgtnode);
+    to_delete += target;
+
+    alpha_id_t parent_id = delegatep->getId(tgtnode->parent);
+    alpha_delnode(tgtnode);
+    for (auto it = to_delete.begin(); it < to_delete.end(); ++it) {
+        delegatep->remId(*it);
+    }
+
+    return parent_id;
 }
 
 int QAlpha::_hypo_addcut(AlphaDelegate *delegatep, alpha_id_t target) {
@@ -201,7 +283,7 @@ int QAlpha::_hypo_remcut(AlphaDelegate *delegatep, alpha_id_t target) {
     struct alpha_node *tgtnode = delegatep->getNode(target);
 }
 
-int QAlpha::hypo_insert(alpha_id_t target, alpha_id_t content) {
+int QAlpha::hypo_insert(alpha_id_t target, QString content) {
     return _hypo_insert(&stageDelegate, target, content);
 }
 int QAlpha::hypo_delete(alpha_id_t target) {
@@ -214,7 +296,7 @@ int QAlpha::hypo_remcut(alpha_id_t target) {
     return _hypo_remcut(&stageDelegate, target);
 }
 
-int QAlpha::clip_insert(alpha_id_t target, alpha_id_t content) {
+int QAlpha::clip_insert(alpha_id_t target, QString content) {
     return _hypo_insert(&clipboardDelegate, target, content);
 }
 int QAlpha::clip_delete(alpha_id_t target) {

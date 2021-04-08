@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     QAlpha alpha_engine;
     QQmlApplicationEngine engine;
 
-    engine.rootContext()->setContextProperty("alphaEngine", &alpha_engine);
+    engine.rootContext()->setContextProperty("alpha_engine", &alpha_engine);
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {
