@@ -179,22 +179,35 @@ int QAlpha::prf_delete(alpha_id_t target) {
 
 int QAlpha::prf_addcut(alpha_id_t target) {
     struct alpha_node *tgtnode = stageDelegate.getNode(target);
-    struct alpha_node *parent = alpha_adddneg(tgtnode);
-    if (!parent) {
+    struct alpha_node *parent = tgtnode->parent;
+    if (alpha_adddneg(tgtnode) != ALPHA_RET_OK) {
         return 0;
     }
-
-    _register(&stageDelegate, parent);
-    return stageDelegate.getId(parent);
+    /* register starting from outer added cut */
+    _register(&stageDelegate, tgtnode->parent->parent);
+    alpha_id_t parent_id = stageDelegate.getId(parent);
+    return parent_id;
 }
 
 int QAlpha::prf_remcut(alpha_id_t target) {
     struct alpha_node *tgtnode = stageDelegate.getNode(target);
-    struct alpha_node *parent = tgtnode->parent;
-    if (alpha_remdneg(tgtnode) == ALPHA_RET_OK) {
-        return stageDelegate.getId(parent);
+    if (tgtnode->children.num_sibs != 1) {
+        return 0;
     }
-    return 0;
+    /* this will be the one removed, if removal succeeds */
+    alpha_id_t incut_id = stageDelegate.getId(tgtnode->children.sibs[0]);
+
+    struct alpha_node *parent = tgtnode->parent;
+    if (!parent) {
+        return 0;
+    }
+    if (alpha_remdneg(tgtnode) != ALPHA_RET_OK) {
+        return 0;
+    }
+
+    stageDelegate.remId(incut_id);
+    stageDelegate.remId(target);
+    return stageDelegate.getId(parent);
 }
 
 int QAlpha::prf_cut(alpha_id_t target) {
@@ -225,12 +238,11 @@ int QAlpha::prf_paste(alpha_id_t target, alpha_id_t content) {
     struct alpha_node *tgtnode = stageDelegate.getNode(target);
     struct alpha_node *contnode = clipboardDelegate.getNode(content);
 
-    if (alpha_paste(tgtnode, contnode) == ALPHA_RET_OK) {
-        _register(&stageDelegate, contnode);
-        return target;
-    } else {
+    if (alpha_paste(tgtnode, contnode) != ALPHA_RET_OK) {
         return 0;
     }
+    _register(&stageDelegate, contnode);
+    return target;
 }
 
 int QAlpha::_hypo_insert(AlphaDelegate *delegatep, alpha_id_t target, QString content) {
@@ -277,10 +289,36 @@ int QAlpha::_hypo_delete(AlphaDelegate *delegatep, alpha_id_t target) {
 
 int QAlpha::_hypo_addcut(AlphaDelegate *delegatep, alpha_id_t target) {
     struct alpha_node *tgtnode = delegatep->getNode(target);
+    struct alpha_node *parent = tgtnode->parent;
+    if (!parent) {
+        return 0;
+    }
+
+    alpha_ret_t ret;
+    struct alpha_node *newcut = alpha_makenode(parent, nullptr, ALPHA_TYPE_CUT, &ret);
+    ret = alpha_move(newcut, tgtnode);
+
+    delegatep->addNode(newcut);
+    return delegatep->getId(parent);
 }
 
 int QAlpha::_hypo_remcut(AlphaDelegate *delegatep, alpha_id_t target) {
     struct alpha_node *tgtnode = delegatep->getNode(target);
+    if (tgtnode->type != ALPHA_TYPE_CUT) {
+        return 0;
+    }
+
+    struct alpha_node *parent = tgtnode->parent;
+    if (!parent) {
+        return 0;
+    }
+
+    if (alpha_reparent(parent, tgtnode) != ALPHA_RET_OK) {
+        return 0;
+    }
+
+    delegatep->remId(target);
+    return delegatep->getId(parent);
 }
 
 int QAlpha::hypo_insert(alpha_id_t target, QString content) {
