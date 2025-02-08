@@ -63,8 +63,7 @@ system, without the need for large menus of tiny buttons.
 ![User interface, with labelled components ](images/qalpha_labelled.jpg)
 
 The interface components, labelled in
-Figure [1](#fig:labelled){reference-type="ref"
-reference="fig:labelled"}, are as follows:
+the figure above, are as follows:
 
 1.  The clipboard, where copied diagrams are stored
 2.  The stage, the primary diagram being worked on
@@ -80,14 +79,14 @@ In every mode, users are able cycle through the modes with the keys
 `m/M`, and zoom in/out with `z/Z`. In hypothesis mode, the user can
 click the stage in order to add new terms in the top-level conjunction,
 through a simple dialog, as shown in
-Figure [2](#fig:dialog){reference-type="ref" reference="fig:dialog"}.
+the figure above.
 This figure also shows the commands available in hypothesis mode. These
 commands are executed by clicking on individuual terms to select them,
 and pressing the appropriate key. Terms are highlighted with a drop
 shadow to indicate the term under the mouse, and the term that has been
-selected, as shown in
-Figure [\[fig:glow\]](#fig:glow){reference-type="ref"
-reference="fig:glow"}.
+selected, as shown below.
+
+![image](images/glow.jpg)
 
 The commands in hypothesis mode simply manipulate the selected nodes
 freely, as they are not subject to any constraints or inference rules
@@ -96,22 +95,17 @@ proposition within a cut, `d` deletes the node and its children, and
 `c/C` add and remove cuts around the selected node respectively. The
 keyboard-based input greatly expedites certain common tasks, allowing
 fairly complex graphs to be quickly and easily created, with the user's
-fingers only infrequently leaving the keyboard. The graph in
-Figure [\[fig:complex_graphs\]](#fig:complex_graphs){reference-type="ref"
-reference="fig:complex_graphs"} was created with approximately 10 mouse
+fingers only infrequently leaving the keyboard. The complex graph below was created with approximately 10 mouse
 clicks, including those required for rectifying errors. This framework
 also creates room for further navigation shortcuts to be added
 (e.g. `hjkl` navigation to select different nodes, or to move around the
 diagram in navigation mode).
 
-![image](images/glow.jpg)
-
 ![image](images/complex_graphs.jpg)
 
 An extension here that was quite simple to implement is the use of
 images as proposition names (which are, internally, file URLs), as
-illustrated in Figure [3](#fig:graphic){reference-type="ref"
-reference="fig:graphic"}. This is helpful in clearly indicating the
+illustrated in the graph below. This is helpful in clearly indicating the
 semantics of each proposition that is being considered. The
 entertainment and novelty value should also not be overlooked as an aid
 to teaching.
@@ -123,17 +117,14 @@ Finally, in proof mode, the rules of inference of the Alpha system can
 be applied. These include `x` to cut, removing a node via deiteration,
 `y` to yank, storing the subtree rooted at the selected node in the
 clipboard, and allowing it to be pasted according to the rule of
-iteration. A screenshot illustrating this is shown in
-Figure [4](#fig:clipboard){reference-type="ref"
-reference="fig:clipboard"}.
+iteration. A screenshot illustrating this is shown below.
 
 ![The process of pasting a node that has been yanked ](images/paste.jpg)
 
 The other manipulations are `C/c` to insert/remove double cuts, and `d`
 to delete arbitrary graphs with even depth. Lastly, `i` enters a special
 sub-mode, where the user builds a subgraph in the clipboard and can
-insert it into an odd-depth node, as shown in
-Figure [5](#fig:insert){reference-type="ref" reference="fig:insert"}.
+insert it into an odd-depth node, as shown below.
 
 ![Arbitrary graph inserted at top-level node ](images/insert.jpg)
 
